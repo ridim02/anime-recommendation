@@ -1,0 +1,30 @@
+{
+  "name": "anime-recommendation",
+  "version": "1.0.0",
+  "description": "A Node.js backend for an anime recommendation system. It connects to a Python-based TensorFlow model to provide personalized anime recommendations to users.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "axios-rate-limit": "^1.4.0",
+    "body-parser": "^1.20.3",
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prettier": "3.4.2"
+  },
+  "type": "commonjs"
+}
