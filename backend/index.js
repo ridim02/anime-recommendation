@@ -84,7 +84,13 @@ app.get('/recommendations/:user_id', async (req, res) => {
                         title_english: animeData.title_english || animeData.title,
                         synopsis: animeData.synopsis,
                         status: animeData.status,
-                        image_url: animeData.images?.jpg?.image_url
+                        image_url: animeData.images?.jpg?.image_url,
+                        title: animeData.title,
+                        season: animeData.season,
+                        score: animeData.score,
+                        episodes: animeData.episodes,
+                        members: animeData.members,
+                        rank: animeData.rank
                     };
                 } catch (error) {
                     console.error(`Error fetching details for anime ID ${animeId}:`, error.message);

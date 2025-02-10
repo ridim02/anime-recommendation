@@ -21,7 +21,7 @@ const jikanApi = rateLimit(axios.create(), {
 async function fetchWithRetry(animeId, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await jikanApi.get(`https://api.jikan.moe/v4/anime/${animeId}`);
+      const response = await jikanApi.get(`${JIKAN_API_BASE}/${animeId}/full`);
       return response.data.data;
     } catch (error) {
       if (error.response?.status === 429) {
@@ -35,24 +35,35 @@ async function fetchWithRetry(animeId, retries = 3) {
 }
 
 async function getAnimeDetails(animeId) {
-  const cached = cache.get(animeId);
-  if (cached) return cached;
-
-  const data = await fetchWithRetry(animeId);
-  if (data) {
-    const result = {
-      mal_id: data.mal_id,
-      title_english: data.title_english || data.title,
-      synopsis: data.synopsis,
-      status: data.status,
-      image_url: data.images?.jpg?.image_url,
-      season: data.season,
-      genre: data.genres,
-      links: data.streaming,
-      score: data.score
-    };
-    cache.set(animeId, result);
-    return result;
+  try{
+    const cached = cache.get(animeId);
+    if (cached) return cached;
+  
+    const data = await fetchWithRetry(animeId);
+    if (data) {
+      const result = {
+        mal_id: data.mal_id,
+        title_english: data.title_english || data.title,
+        synopsis: data.synopsis,
+        status: data.status,
+        image_url: data.images?.jpg?.image_url,
+        title: data.title,
+        season: data.season,
+        year: data.year,
+        score: data.score,
+        episodes: data.episodes,
+        members: data.members,
+        rank: data.rank,
+        genres: data.genres,
+        external: data.external,
+        streaming: data.streaming
+      };
+      cache.set(animeId, result);
+      return result;
+    }
+  }
+  catch (error) {
+    console.log(`Error: ${error}`);
   }
   return null;
 }
@@ -81,7 +92,9 @@ app.get('/anime/:id', async (req, res) => {
   try {
     const animeId = req.params.id;
     const result = await getAnimeDetails(animeId);
-    result ? res.json(result) : res.status(404).json({ error: 'Anime not found' });
+    result
+      ? res.json(result)
+      : res.status(404).json({ error: 'Anime not found' });
   } catch (error) {
     error.response?.status === 404 
       ? res.status(404).json({ error: 'Anime not found' })
@@ -89,11 +102,24 @@ app.get('/anime/:id', async (req, res) => {
   }
 });
 
+app.get('/anime-by-name/:name', async (req, res) => {
+  try {
+    const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
+    const animeDetails = await processInBatches(response.data, 3, 1000);
+    animeDetails
+      ? res.json(animeDetails)
+      : res.status(404).json({ error: 'Anime not found' });
+  } catch (error) {
+    error.response?.status === 404 
+      ? res.status(404).json({ error: 'Anime not found: ' + error })
+      : res.status(500).json({ error: 'Failed to fetch anime data: ' + error});
+  }
+});
+
 app.get('/recommendations/:user_id', async (req, res) => {
   try {
     const userId = req.params.user_id;
-    const response = await axios.get(`${FASTAPI_BASE}/user/get-recommendations/${userId}/21`);
-    console.log(response.data)
+    const response = await axios.get(`${FASTAPI_BASE}/user/get-recommendations/${userId}/10`);
     const animeDetails = await processInBatches(response.data, 3, 1000);
     res.json(animeDetails);
   } catch (error) {
@@ -101,36 +127,34 @@ app.get('/recommendations/:user_id', async (req, res) => {
   }
 });
 
-app.get('/popular-animes', async (req,res)=>{
-  try{
+app.get('/popular-animes', async (req, res) => {
+  try {
     const response = await axios.get('https://api.jikan.moe/v4/top/anime');
-    res.json(response.data.data);
-  }
-  catch (error) {
+    res.json(response.data.data.slice(0,9));
+  } catch (error) {
     res.status(500).json({ error: `Failed to fetch popular-animes: ${error}` });
   }
-})
+});
 
 app.get('/group/random/recommendations', async (req, res) => {
-    try {
-      const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
-      const animeDetails = await processInBatches(response.data.anime_ids, 3, 1000);
-      res.json(animeDetails);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch recommendations' });
-    }
-  });  
+  try {
+    const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
+    const animeDetails = await processInBatches(response.data.anime_ids, 3, 1000);
+    res.json(animeDetails);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch recommendations for group: ' + error });
+  }
+});  
 
-  app.get('/user/similar-anime/:name', async (req, res) => {
-      try {
-        const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
-        const animeDetails = await processInBatches(response.data, 3, 1000);
-        console.log(animeDetails)
-        res.json(animeDetails);
-      } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch recommendations' });
-      }
-    });  
+app.get('/user/similar-anime/:name', async (req, res) => {
+  try {
+    const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
+    const animeDetails = await processInBatches(response.data, 3, 1000);
+    res.json(animeDetails);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
+  }
+});
 
 [
   '/user/preferences/:user_id',
@@ -139,7 +163,6 @@ app.get('/group/random/recommendations', async (req, res) => {
   const [path] = endpoint.split(':');
   app.get(endpoint, async (req, res) => {
     try {
-        console.log(req.originalUrl)
       const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
       res.json(response.data);
     } catch (error) {
@@ -147,6 +170,18 @@ app.get('/group/random/recommendations', async (req, res) => {
     }
   });
 });
+
+app.get("/anime-by-genre/:genre/:user_id", async (req, res) => {
+  try{
+    const userId = req.params.user_id;
+    const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
+    const animeDetails = await processInBatches(response.data, 3, 1000);
+    res.json(animeDetails);
+  }
+  catch (error){
+    res.status(500).json({error: `Failed to fetch: ${error}`})
+  }
+})
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

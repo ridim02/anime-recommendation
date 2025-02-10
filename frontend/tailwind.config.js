@@ -6,13 +6,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#9B6A6C",
-        secondary: "#885A5E",
-        accent: "#935FA7",
-        background: "#9A6C74",
-        textPrimary: "#ffffff",
-        textSecondary: "#f3f3f3",
+        primary: "#141321",
+        secondary: "#1c1b29",
+        accent: "#F472B6",
+        highlight: "#FFFFFF",
       },
+      fontFamily: {
+        sans: ['Nunito', 'sans-serif'],
+      },
+
     },
   },
   plugins: [],

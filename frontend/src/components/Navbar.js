@@ -1,17 +1,29 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { FiSearch, FiMenu, FiX } from "react-icons/fi";
+import AniMatchLogo from "./AniMatchLogo";
+import HeroSection from "./HeroSection";
+
 
 const Navbar = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <div className="text-lg font-bold">
-        <Link to="/">AnimeRec</Link>
-      </div>
-      <div className="space-x-4">
-        <Link to="/" className="hover:text-gray-300">Home</Link>
-        <Link to="/search" className="hover:text-gray-300">Search</Link>
-        <Link to="/profile" className="hover:text-gray-300">Profile</Link>
-        <Link to="/group" className="hover:text-gray-300">Group</Link>
+    <nav className="bg-[#131225] text-white p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <div ></div>
+
+        <ul className="hidden md:flex space-x-6 text-lg">
+          <li>
+            <Link to="/" className="text-2xl font-bold">
+              <nav className="p-4 bg-[#141321] flex items-center">
+                <AniMatchLogo />
+              </nav>
+            </Link>
+            </li>
+        </ul>
+
+        <div ></div>
       </div>
     </nav>
   );

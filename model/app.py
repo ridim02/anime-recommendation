@@ -25,6 +25,9 @@ def getAnimeFrame(anime):
     if isinstance(anime, str):
         return df[df.eng_version == anime]
 
+def SearchAnime(name):
+    return df[df['eng_version'].str.contains(name, case=False, na=False)]['anime_id'].head(10)
+
 def find_similar_animes(name, n=10, return_dist=False, neg=False):
     try:
         index = getAnimeFrame(name).anime_id.values[0]
@@ -50,15 +53,24 @@ def find_similar_animes(name, n=10, return_dist=False, neg=False):
         print(e)
         print('{}!, Not Found in Anime list'.format(name))
 
-def GetAnimesByGenre(df, genre):
-    df = df.assign(Genres=df['Genres'].str.split(',')).explode('Genres')
-    df['Genres'] = df['Genres'].str.strip()
-    
-    df_genre = df[df['Genres'] == genre]
-    df_sorted = df_genre.sort_values(by='Score', ascending=False)
-    
-    anime_ids = df_sorted.head(10)[['anime_id', 'Score']]
-    
+def GetAnimesByGenre(df, genre, user_id):
+    try:
+        df = df.assign(Genres=df['Genres'].str.split(',')).explode('Genres')
+        df['Genres'] = df['Genres'].str.strip()
+        
+        user_id = np.int64(user_id)
+        animes_watched_by_user = rating_df[rating_df.user_id==user_id]
+        anime_not_watched_df = df[
+            ~df["anime_id"].isin(animes_watched_by_user.anime_id.values)
+        ]
+        
+        df_genre = anime_not_watched_df[anime_not_watched_df['Genres'] == genre]
+        df_sorted = df_genre.sort_values(by='Score', ascending=False)
+        
+        anime_ids = df_sorted.head(10)['anime_id'].values
+    except Exception as e:
+        print("GetAnimesByGenre")
+        print("Error: "+e)
     return anime_ids
 
 # user helper functions
@@ -291,11 +303,11 @@ def getRandomGroupOfUsers():
         print("/random-group/users")
         print(e)
         
-@app.get("/anime-by-genre/{genre}")
-def getAnimeByGenre(genre):
+@app.get("/anime-by-genre/{genre}/{userid}")
+def getAnimeByGenre(genre, userid):
     try:
-        anime_ids = GetAnimesByGenre(str(genre), df)
-        return anime_ids
+        anime_ids = GetAnimesByGenre(df, str(genre), int(userid))
+        return anime_ids.tolist()
     except Exception as e:
         print("/anime-by-genre")
         print(e)
@@ -345,10 +357,11 @@ def get_similar_anime(anime_id: int):
     except Exception as e:
         print(e)
       
-@app.get("/user/similar-anime-byname/{name}")
-def get_similar_anime(name: str):
+@app.get("/anime-by-name/{name}")
+def get_anime_byname(name: str):
     try:
-        return find_similar_animes(name, n=10, neg=False)
+        anime_ids = SearchAnime(str(name))
+        return SearchAnime(str(name)).tolist()
     except Exception as e:
         print(e)
 
