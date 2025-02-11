@@ -171,7 +171,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary text-white">
+    <div className="min-h-screen text-white">
       <HeroSection onSearch={handleSearch} />
 
       {searchError && (

@@ -12,7 +12,7 @@ const HeroSection = ({ onSearch }) => {
   };
 
   return (
-    <div className="text-white flex items-center justify-center mb-10 bg-primary">
+    <div className="text-white flex items-center justify-center mb-10">
       <div className="relative bg-[#1c1b29] p-8 rounded-3xl flex flex-col gap-4 w-[80%] max-w-4xl shadow-lg border border-pink-400">
         {/* <AniMatchLogo /> */}
         <div className="relative flex items-center">

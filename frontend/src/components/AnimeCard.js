@@ -9,7 +9,9 @@ const AnimeCard = ({ anime }) => {
     <div className="bg-primary text-white rounded-lg shadow-lg overflow-hidden w-64 h-120 p-3 transform transition duration-300 hover:scale-105 pb-15">
       <div className="relative h-40">
         <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-lg" />
-        <div className="absolute top-2 left-2 bg-secondary text-xs px-2 py-1 rounded-md font-semibold text-white"> {anime.status}</div>
+        <div className="absolute top-2 left-2 bg-secondary text-xs px-2 py-1 rounded-md font-semibold text-white">
+          {anime.status}
+        </div>
       </div>
 
       <div className="p-3 flex flex-col justify-between">
@@ -17,8 +19,18 @@ const AnimeCard = ({ anime }) => {
           {anime.season} {anime.year} • {anime.episodes} episodes
         </p>
 
-        <h3 className="text-lg font-bold mt-1">
-          <Link to={`/anime/${anime.mal_id}`} className="hover:underline"> {title} </Link>
+        <h3
+          className="text-lg font-bold mt-1 overflow-hidden"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            minHeight: "3rem" // Adjust this value if needed for your font-size/line-height
+          }}
+        >
+          <Link to={`/anime/${anime.mal_id}`} className="hover:underline">
+            {title}
+          </Link>
         </h3>
 
         <div className="flex items-center justify-between mt-2 text-white">
