@@ -121,6 +121,7 @@ app.get('/recommendations/:user_id', async (req, res) => {
     const userId = req.params.user_id;
     const response = await axios.get(`${FASTAPI_BASE}/user/get-recommendations/${userId}/10`);
     const animeDetails = await processInBatches(response.data, 3, 1000);
+
     res.json(animeDetails);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch recommendations' });

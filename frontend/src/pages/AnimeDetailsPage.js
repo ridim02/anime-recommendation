@@ -165,14 +165,14 @@ const AnimeDetailsPage = () => {
           )}
 
           {/* Genres Section */}
-          {anime.genre && (
+          {(anime.genres || anime.genre) && (
             <div className="mt-6">
               <h2 className="text-2xl font-semibold">Genres:</h2>
               <div className="flex flex-wrap mt-2">
-                {anime.genre.map(g => (
+                {(anime.genres || anime.genre).map((g, idx) => (
                   <span 
-                    key={g.mal_id} 
-                    className="mr-2 mb-2 px-3 py-1 bg-pink-400 text-white rounded-full text-sm"
+                    key={g.mal_id || idx} 
+                    className="mr-2 mb-2 px-2 py-1 bg-accent text-white rounded-md text-xs"
                   >
                     {g.name}
                   </span>
