@@ -6,6 +6,7 @@ import SearchPage from './pages/SearchPage';
 import UserProfilePage from './pages/UserProfilePage';
 import GroupRecommendationsPage from './pages/GroupRecommendationsPage';
 import Navbar from './components/Navbar';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/group" element={<GroupRecommendationsPage />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Router>
   );
