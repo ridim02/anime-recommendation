@@ -17,12 +17,13 @@ const LoginPage = () => {
         username,
         password,
       });
-      const { userId, username: returnedUsername } = response.data;
-      sessionStorage.setItem("userId", userId);
-      sessionStorage.setItem("username", returnedUsername);
+      console.log(response.data);
+      sessionStorage.setItem("userId", response.data.userId);
+      sessionStorage.setItem("username", response.data.username);
+      sessionStorage.setItem("mal_id", response.data.mal_id);
       navigate("/");
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      setError("Invalid credentials. Please try again." + err);
     }
   };
 

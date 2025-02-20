@@ -3,16 +3,39 @@ const axios = require('axios');
 const cors = require('cors');
 const rateLimit = require('axios-rate-limit');
 const NodeCache = require('node-cache');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const users = require('./models/users');
 
 const app = express();
 const port = process.env.PORT || 3001;
 const cache = new NodeCache({ stdTTL: 3600 });
 
+// Middleware
 app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  session({
+    secret: "anime-recommendations",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+// Connect to MongoDB
+mongoose
+  .connect("mongodb://localhost:27017/anime-recommendation", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4/anime';
 const FASTAPI_BASE = 'http://localhost:8000';
-
 const jikanApi = rateLimit(axios.create(), { 
   maxRequests: 3,
   perMilliseconds: 1000
@@ -35,7 +58,7 @@ async function fetchWithRetry(animeId, retries = 3) {
 }
 
 async function getAnimeDetails(animeId) {
-  try{
+  try {
     const cached = cache.get(animeId);
     if (cached) return cached;
   
@@ -61,8 +84,7 @@ async function getAnimeDetails(animeId) {
       cache.set(animeId, result);
       return result;
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.log(`Error: ${error}`);
   }
   return null;
@@ -87,6 +109,25 @@ async function processInBatches(items, batchSize, delayMs) {
   }
   return results.filter(item => item !== null);
 }
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await users.findOne({ username: username });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    req.session.userId = user.user_id;
+    res.json({
+      userId: user.user_id,
+      username: user.username,
+      mal_id: user.mal_id,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 app.get('/anime/:id', async (req, res) => {
   try {
@@ -121,7 +162,6 @@ app.get('/recommendations/:user_id', async (req, res) => {
     const userId = req.params.user_id;
     const response = await axios.get(`${FASTAPI_BASE}/user/get-recommendations/${userId}/10`);
     const animeDetails = await processInBatches(response.data, 3, 1000);
-
     res.json(animeDetails);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch recommendations' });
@@ -140,12 +180,12 @@ app.get('/popular-animes', async (req, res) => {
 app.get('/group/random/recommendations', async (req, res) => {
   try {
     const response = await axios.get(`${FASTAPI_BASE}${req.originalUrl}`);
-    const animeDetails = await processInBatches(response.data.anime_ids, 3, 1000);
-    res.json(animeDetails);
+    console.log(response);
+    res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch recommendations for group: ' + error });
   }
-});  
+});
 
 app.get('/user/similar-anime/:name', async (req, res) => {
   try {
@@ -180,9 +220,9 @@ app.get("/anime-by-genre/:genre/:user_id", async (req, res) => {
     res.json(animeDetails);
   }
   catch (error){
-    res.status(500).json({error: `Failed to fetch: ${error}`})
+    res.status(500).json({error: `Failed to fetch: ${error}`});
   }
-})
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

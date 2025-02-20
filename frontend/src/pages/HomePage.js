@@ -18,7 +18,7 @@ const HomePage = () => {
   const [searchError, setSearchError] = useState("");
 
   const carouselRef = useRef(null);
-  const userId = 105315;
+  const userId = sessionStorage.getItem("mal_id") ? sessionStorage.getItem("mal_id") : 105315;
 
   useEffect(() => {
     axios
