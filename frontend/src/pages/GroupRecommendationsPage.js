@@ -16,7 +16,6 @@ const GroupRecommendationsPage = () => {
   const [votingStarted, setVotingStarted] = useState(false);
   const carouselRef = useRef(null);
 
-  // Fetch group recommendations (group members and anime IDs)
   useEffect(() => {
     axios
       .get("http://localhost:3001/group/random/recommendations")
@@ -32,11 +31,10 @@ const GroupRecommendationsPage = () => {
       });
   }, []);
 
-  // Handler to start voting: process anime IDs and initialize votes
   const handleStartVoting = async () => {
     setLoadingAnime(true);
     try {
-      const animeDetails = await processInBatches(animeIds, 3, 1000);
+      const animeDetails = await processInBatches(animeIds.slice(0, 10), 3, 1000);
       setGroupAnime(animeDetails);
       const initialVotes = {};
       animeDetails.forEach((anime) => {
@@ -52,7 +50,6 @@ const GroupRecommendationsPage = () => {
     }
   };
 
-  // Timer effect: starts when voting begins.
   useEffect(() => {
     if (!votingStarted) return;
     if (timeLeft <= 0) {
@@ -92,7 +89,6 @@ const GroupRecommendationsPage = () => {
     }
   };
 
-  // Helper: processInBatches function to fetch anime details
   async function processInBatches(items, batchSize, delayMs) {
     const results = [];
     for (let i = 0; i < items.length; i += batchSize) {
@@ -120,7 +116,6 @@ const GroupRecommendationsPage = () => {
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold mb-6">Group Recommendations</h1>
 
-        {/* Display group members list if voting hasn't started */}
         {!votingStarted && (
           <div className="w-full mb-6">
             <h2 className="text-xl font-bold mb-2">Group Members</h2>
@@ -135,7 +130,6 @@ const GroupRecommendationsPage = () => {
           </div>
         )}
 
-        {/* Start Voting Button (only when voting hasn't started) */}
         {!votingStarted && (
           <div className="mb-6 flex justify-center">
             <button
@@ -147,7 +141,6 @@ const GroupRecommendationsPage = () => {
           </div>
         )}
 
-        {/* Timer Display */}
         {votingStarted && (
           <div className="flex justify-end mb-4">
             {timeLeft > 0 ? (
@@ -163,7 +156,6 @@ const GroupRecommendationsPage = () => {
           </div>
         )}
 
-        {/* Winner Display */}
         {timeLeft <= 0 && selectedAnime && (
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-4 text-center">
@@ -177,7 +169,6 @@ const GroupRecommendationsPage = () => {
           </div>
         )}
 
-        {/* Voting Carousel */}
         {votingStarted && (
           <div className="relative bg-gray-900 p-6 rounded-lg shadow-lg">
             <button
